@@ -9,7 +9,6 @@ def check_errors(response):
 class Deck:
   def __init__(self, attributes):
     self.id = attributes.get("id")
-    self.key = attributes.get("key")
     self.name = attributes.get("name")
     self.description = attributes.get("description")
     self.attributes = attributes
@@ -18,7 +17,6 @@ class Assessment:
   def __init__(self, attributes):
     self.id = attributes.get("id")
     self.deck_id = attributes.get("deck_id")
-    self.deck_key = attributes.get("deck_key")
     self.completed_at = attributes.get("completed_at")
     self.created_at = attributes.get("created_at")
     self.attributes = attributes
@@ -60,8 +58,9 @@ class PersonalityType:
     self.badge = Badge(attributes.get("badge"))
     self.compatible_personality_type_id = attributes.get("compatible_personality_type_id")
     famous_people = []
-    for famous_person in attributes.get("famous_people"):
-      famous_people.append(FamousPerson(famous_person))
+    if type(attributes.get("famous_people")) is list:
+      for famous_person in attributes.get("famous_people"):
+        famous_people.append(FamousPerson(famous_person))
     self.famous_people = famous_people
     self.attributes = attributes
 
@@ -92,17 +91,17 @@ class PersonalityTrait:
     self.attributes = attributes
 
 class Traitify:
-  def __init__(self, secret_key=None, deck_key=None, host="api-sandbox.traitify.com", version="v1"):
+  def __init__(self, secret_key=None, deck_id=None, host="api-sandbox.traitify.com", version="v1"):
     self.host = host
     self.secret_key = secret_key
-    self.deck_key = deck_key
+    self.deck_id = deck_id
     self.version = version
 
   def headers(self):
     return { "Accept":"application/json", "Content-Type":"application/json", "Authorization":"Basic " + self.secret_key + ":x" }
 
   def get(self, path):
-    conn = httplib.HTTPConnection(self.host)
+    conn = httplib.HTTPSConnection(self.host)
     conn.request("GET", "/" + self.version + path, None, self.headers())
     response = conn.getresponse()
     data = response.read()
@@ -112,7 +111,7 @@ class Traitify:
     return response
 
   def post(self, path, arguments):
-    conn = httplib.HTTPConnection(self.host)
+    conn = httplib.HTTPSConnection(self.host)
     conn.request("POST", "/" + self.version + path, arguments, self.headers())
     response = conn.getresponse()
     data = response.read()
@@ -122,7 +121,7 @@ class Traitify:
     return response
 
   def put(self, path, arguments):
-    conn = httplib.HTTPConnection(self.host)
+    conn = httplib.HTTPSConnection(self.host)
     conn.request("PUT", "/" + self.version + path, arguments, self.headers())
     response = conn.getresponse()
     data = response.read()
@@ -138,9 +137,9 @@ class Traitify:
       decks.append(Deck(deck))
     return decks
 
-  def create_assessment(self, deck_key=None):
-    if deck_key is None: deck_key = self.deck_key
-    data = self.post("/assessments", json.dumps({"deck_key": deck_key}))
+  def create_assessment(self, deck_id=None):
+    if deck_id is None: deck_id = self.deck_id
+    data = self.post("/assessments", json.dumps({"deck_id": deck_id}))
     return Assessment(data)
 
   def get_assessment(self, assessment_id):
