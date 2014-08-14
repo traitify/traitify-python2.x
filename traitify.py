@@ -6,6 +6,12 @@ def check_errors(response):
   if type(response) is dict and response.get("errors") is not None:
     raise TraitifyException(", ".join(response["errors"]))
 
+def get_details(raw_details):
+    details = []
+    for detail in raw_details:
+      details.append(Detail(detail))
+    return details
+
 class Deck:
   def __init__(self, attributes):
     self.id = attributes.get("id")
@@ -35,6 +41,11 @@ class Slide:
     self.created_at = attributes.get("created_at")
     self.attributes = attributes
 
+class Detail:
+  def __init__(self, attributes):
+    self.title = attributes.get("title")
+    self.body = attributes.get("body")
+
 class PersonalityBlend:
   def __init__(self, attributes):
     self.id = attributes.get("id")
@@ -42,12 +53,7 @@ class PersonalityBlend:
     self.personality_type_2 = PersonalityType(attributes.get("personality_type_2"))
     self.name = attributes.get("name")
     self.description = attributes.get("description")
-    self.compliments = attributes.get("compliments")
-    self.conflicts = attributes.get("conflicts")
-    self.compatible_work_environment_1 = attributes.get("compatible_work_environment_1")
-    self.compatible_work_environment_2 = attributes.get("compatible_work_environment_2")
-    self.compatible_work_environment_3 = attributes.get("compatible_work_environment_3")
-    self.compatible_work_environment_4 = attributes.get("compatible_work_environment_4")
+    self.details = get_details(attributes.get("details"))
     self.attributes = attributes
 
 class PersonalityType:
@@ -56,12 +62,7 @@ class PersonalityType:
     self.name = attributes.get("name")
     self.description = attributes.get("description")
     self.badge = Badge(attributes.get("badge"))
-    self.compatible_personality_type_id = attributes.get("compatible_personality_type_id")
-    famous_people = []
-    if type(attributes.get("famous_people")) is list:
-      for famous_person in attributes.get("famous_people"):
-        famous_people.append(FamousPerson(famous_person))
-    self.famous_people = famous_people
+    self.details = get_details(attributes.get("details"))
     self.attributes = attributes
 
 class Badge:
@@ -81,6 +82,13 @@ class FamousPerson:
     self.name = attributes.get("name")
     self.description = attributes.get("description")
     self.picture = attributes.get("picture")
+    self.attributes = attributes
+
+class PersonalityTraitDichotomoy:
+  def __init__(self, attributes):
+    self.left_personality_trait = PersonalityTrait(attributes.get("left_personality_trait"))
+    self.right_personality_trait = PersonalityTrait(attributes.get("right_personality_trait"))
+    self.score = attributes.get("score")
     self.attributes = attributes
 
 class PersonalityTrait:
@@ -190,8 +198,12 @@ class Traitify:
     data = self.get("/assessments/" + assessment_id + "/personality_traits")
     personality_traits = []
     for personality_trait in data:
-      personality_traits.append({
-        "left_personality_trait": PersonalityTrait(personality_trait.get("left_personality_trait")),
-        "right_personality_trait": PersonalityTrait(personality_trait.get("right_personality_trait")),
-        "score": personality_trait.get("score") })
+      personality_traits.append(PersonalityTraitDichotomoy(personality_trait))
+    return personality_traits
+
+  def get_personality_traits_raw(self, assessment_id):
+    data = self.get("/assessments/" + assessment_id + "/personality_traits/raw")
+    personality_traits = []
+    for personality_trait in data:
+      personality_traits.append(PersonalityTrait(personality_trait))
     return personality_traits

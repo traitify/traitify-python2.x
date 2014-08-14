@@ -3,6 +3,7 @@ from traitify import Traitify
 
 # Initialize and Authenticate
 secret_key = "Your secret key"
+
 traitify = Traitify(secret_key)
 
 # Get the decks
@@ -37,7 +38,11 @@ personality_types = traitify.get_personality_types(assessment.id)
 
 # Get an assessment's results (personality type traits)
 personality_type = personality_types["personality_types"][0]["personality_type"]
+
 personality_traits = traitify.get_personality_type_traits(assessment.id, personality_type.id)
 
 # Get an assessment's results (personality traits)
 personality_traits = traitify.get_personality_traits(assessment.id)
+
+# Get an assessment's results (personality traits raw, no dichotomy returned)
+personality_traits_raw = traitify.get_personality_traits_raw(assessment.id)

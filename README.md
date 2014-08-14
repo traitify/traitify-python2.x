@@ -6,14 +6,14 @@ Traitify  Python 2.x
 from traitify import Traitify
 
 # Initialize and Authenticate
-secret_key = "Your Secret Key"
+secret_key = "your_secret_key"
 traitify = Traitify(secret_key)
 
 # Get the decks
 decks = traitify.get_decks()
 
 # Set deck key
-traitify.deck_key = decks[0].key
+traitify.deck_id = decks[0].id
 
 # Create an assessment
 assessment = traitify.create_assessment()
@@ -41,8 +41,12 @@ personality_types = traitify.get_personality_types(assessment.id)
 
 # Get an assessment's results (personality type traits)
 personality_type = personality_types["personality_types"][0]["personality_type"]
+
 personality_traits = traitify.get_personality_type_traits(assessment.id, personality_type.id)
 
 # Get an assessment's results (personality traits)
 personality_traits = traitify.get_personality_traits(assessment.id)
+
+# Get an assessment's results (personality traits raw, no dichotomy returned)
+personality_traits_raw = traitify.get_personality_traits_raw(assessment.id)
 ```
