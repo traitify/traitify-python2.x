@@ -12,7 +12,7 @@ traitify = Traitify(secret_key)
 # Get the decks
 decks = traitify.get_decks()
 
-# Set deck key
+# Set deck id
 traitify.deck_id = decks[0].id
 
 # Create an assessment
