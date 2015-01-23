@@ -56,3 +56,10 @@ careers = traitify.career_matches(assessment.id)
 # Get multiple types of results from an assessment
 results = traitify.results(assessment.id, ["types", "traits", "blend"])
 ```
+
+# Running Tests
+Tests can be run by passing in your secret key to the test script:
+
+```
+python test.py your_secret_key_here
+```
