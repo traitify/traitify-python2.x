@@ -40,7 +40,7 @@ slides = traitify.update_slides(assessment.id, slides)
 personality_types = traitify.get_personality_types(assessment.id)
 
 # Get an assessment's results (personality type traits)
-personality_type = personality_types["personality_types"][0]["personality_type"]
+personality_type = personality_types["personality_types"][0].personality_type
 
 personality_traits = traitify.get_personality_type_traits(assessment.id, personality_type.id)
 
@@ -49,4 +49,10 @@ personality_traits = traitify.get_personality_traits(assessment.id)
 
 # Get an assessment's results (personality traits raw, no dichotomy returned)
 personality_traits_raw = traitify.get_personality_traits_raw(assessment.id)
+
+# Get an assessment's career matches, only applicable to the `career-deck` deck
+careers = traitify.career_matches(assessment.id)
+
+# Get multiple types of results from an assessment
+results = traitify.results(assessment.id, ["types", "traits", "blend"])
 ```

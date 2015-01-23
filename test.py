@@ -1,48 +1,129 @@
-# Import traitify
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys
+import unittest
 from traitify import Traitify
 
-# Initialize and Authenticate
-secret_key = "Your secret key"
+class TraitifyTest(unittest.TestCase):
+  traitify = "Needs setup"
+  assessment = None
 
-traitify = Traitify(secret_key)
+  def setUp(self):
+    self.assessment = self.traitify.create_assessment('career-deck')
 
-# Get the decks
-decks = traitify.get_decks()
+  def complete_assessment(self):
+    slides = self.traitify.get_slides(self.assessment.id)
+    for slide in slides:
+      slide.response = True
+      slide.time_taken = 200
+    slides = self.traitify.update_slides(self.assessment.id, slides)
+    return self
 
-# Set deck id
-traitify.deck_id = decks[0].id
+  def test_decks(self):
+    # Get the decks
+    decks = self.traitify.get_decks()
 
-# Create an assessment
-assessment = traitify.create_assessment()
+    self.assertTrue(len(decks) > 0)
 
-# Get an assessment
-assessment = traitify.get_assessment(assessment.id)
+  def test_create_assessment(self):
+    assessment = self.traitify.create_assessment('core')
+    self.assertTrue(assessment.deck_id == "core")
+    assessment = self.traitify.create_assessment('career-deck')
+    self.assertTrue(assessment.deck_id == "career-deck")
 
-# Get an assessment's slides
-slides = traitify.get_slides(assessment.id)
+  def test_get_assessment(self):
+    self.assertTrue(self.traitify.get_assessment(self.assessment.id).id != None)
 
-# Upate a slide
-slide = slides[0]
-slide.response = True
-slide.time_taken = 200
-slide = traitify.update_slide(assessment.id, slide)
+  def test_get_slides(self):
+    slides = self.traitify.get_slides(self.assessment.id)
+    self.assertTrue(len(slides) > 0)
 
-# Bulk update slides
-for slide in slides:
-  slide.response = True
-  slide.time_taken = 200
-slides = traitify.update_slides(assessment.id, slides)
+  def test_update_slide(self):
+    slides = self.traitify.get_slides(self.assessment.id)
+    slide = slides[0]
+    slide.response = True
+    slide.time_taken = 200
+    slide = self.traitify.update_slide(self.assessment.id, slide)
 
-# Get an assessment's results (personality types)
-personality_types = traitify.get_personality_types(assessment.id)
+    self.assertTrue(slide.time_taken == 200)
+    self.assertTrue(slide.response)
 
-# Get an assessment's results (personality type traits)
-personality_type = personality_types["personality_types"][0]["personality_type"]
+  def test_bulk_update_slides(self):
+    slides = self.traitify.get_slides(self.assessment.id)
+    for slide in slides:
+      slide.response = True
+      slide.time_taken = 200
+    slides = self.traitify.update_slides(self.assessment.id, slides)
 
-personality_traits = traitify.get_personality_type_traits(assessment.id, personality_type.id)
+    for slide in slides:
+      self.assertTrue(slide.time_taken == 200)
+      self.assertTrue(slide.response)
 
-# Get an assessment's results (personality traits)
-personality_traits = traitify.get_personality_traits(assessment.id)
+  def test_get_personality_types_and_personality_blends(self):
+    self.complete_assessment()
+    results = self.traitify.get_personality_types(self.assessment.id)
 
-# Get an assessment's results (personality traits raw, no dichotomy returned)
-personality_traits_raw = traitify.get_personality_traits_raw(assessment.id)
+    self.assertTrue(results["personality_types"][0].personality_type.name != None)
+    self.assertTrue(results["personality_blend"].name != None)
+
+  def test_get_personality_traits(self):
+    self.complete_assessment()
+    traits = self.traitify.get_personality_traits(self.assessment.id)
+
+    self.assertTrue(traits[0].left_personality_trait.name != None)
+    self.assertTrue(traits[0].right_personality_trait.name != None)
+
+  def test_get_personality_traits_raw(self):
+    self.complete_assessment()
+    traits = self.traitify.get_personality_traits_raw(self.assessment.id)
+
+    self.assertTrue(traits[0].personality_trait.name != None)
+    self.assertTrue(traits[0].score > 0)
+
+  def test_career_matches(self):
+    self.complete_assessment()
+    scored_careers = self.traitify.career_matches(self.assessment.id)
+
+    self.assertTrue(scored_careers[0].career.title != None)
+    self.assertTrue(scored_careers[0].score > 0)
+
+  def test_career_matches_with_limit(self):
+    self.complete_assessment()
+    scored_careers = self.traitify.career_matches(self.assessment.id, 1)
+
+    self.assertTrue(len(scored_careers) == 1)
+
+  def test_career_matches_filtered_by_experience_level(self):
+    self.complete_assessment()
+    scored_careers = self.traitify.career_matches(self.assessment.id, 10, [5])
+
+    for scored_career in scored_careers:
+      if scored_career.career.experience_level != None:
+        self.assertTrue(scored_career.career.experience_level.id == 5)
+
+  def test_default_results(self):
+    self.complete_assessment()
+    results = self.traitify.results(self.assessment.id)
+
+    self.assertTrue(results.id != None)
+    self.assertTrue(results.personality_blend == None)
+    self.assertTrue(results.personality_types == None)
+    self.assertTrue(results.personality_traits == None)
+
+  def test_results_with_traits_and_types(self):
+    self.complete_assessment()
+    results = self.traitify.results(self.assessment.id, ["traits", "types"])
+
+    self.assertTrue(results.id != None)
+    self.assertTrue(results.personality_blend == None)
+    self.assertTrue(results.personality_types != None)
+    self.assertTrue(results.personality_traits != None)
+
+if len(sys.argv) is 1:
+  print "Please pass in your Traitify app's secret key as an argument. If you don't have a Traitify account, please sign up at https://developer.traitify.com."
+else:
+  TraitifyTest.traitify = Traitify(sys.argv.pop())
+
+  suite = unittest.TestLoader().loadTestsFromTestCase(TraitifyTest)
+  unittest.TextTestRunner(verbosity=1).run(suite)
